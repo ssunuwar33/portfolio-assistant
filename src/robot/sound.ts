@@ -54,7 +54,8 @@ export function unlockOnFirstGesture(): () => void {
 /** One note: pitch glides from f0 to f1 with a soft attack and decay. */
 function tone(f0: number, f1: number, dur: number, { delay = 0, type = 'sine' as OscillatorType, vol = 0.1 } = {}) {
   const a = audio();
-  if (!a || !master || a.state !== 'running') return;
+  if (!a || !master) return;
+  if (a.state === 'suspended') void a.resume();
   const t = a.currentTime + delay;
   const osc = a.createOscillator();
   const gain = a.createGain();
@@ -72,7 +73,8 @@ function tone(f0: number, f1: number, dur: number, { delay = 0, type = 'sine' as
 /** Filtered noise burst, used for the "whoosh". */
 function noise(dur: number, { delay = 0, from = 400, to = 3000, vol = 0.12 } = {}) {
   const a = audio();
-  if (!a || !master || a.state !== 'running') return;
+  if (!a || !master) return;
+  if (a.state === 'suspended') void a.resume();
   const t = a.currentTime + delay;
   const buffer = a.createBuffer(1, Math.ceil(a.sampleRate * dur), a.sampleRate);
   const data = buffer.getChannelData(0);
