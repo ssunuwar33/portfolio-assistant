@@ -176,7 +176,7 @@ export const portfolio = {
 
   /* ── The assistant ─────────────────────────────────────────────────────── */
   robot: {
-    name: 'PARU',
+    name: 'ANKU',
     /** Which character to draw: 'avatar' (cartoon portrait) or 'robot'. */
     character: 'avatar' as 'avatar' | 'robot',
     /** Seconds without any activity before the character falls asleep. */
