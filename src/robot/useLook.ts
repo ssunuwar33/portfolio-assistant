@@ -79,7 +79,6 @@ export function useLook(
 
     const ro = new ResizeObserver(measure);
     if (ref.current) ro.observe(ref.current);
-    const remeasure = window.setInterval(measure, 800); // catches drag + layout shifts cheaply
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerdown', onMove, { passive: true });
     window.addEventListener('scroll', measure, { passive: true });
@@ -88,7 +87,6 @@ export function useLook(
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(glanceTimer);
-      clearInterval(remeasure);
       ro.disconnect();
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onMove);

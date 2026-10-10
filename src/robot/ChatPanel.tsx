@@ -64,10 +64,20 @@ export const ChatPanel = forwardRef<HTMLInputElement, ChatPanelProps>(function C
 
   const sheet = variant === 'sheet';
   const panelMotion = sheet
-    ? { initial: { y: '100%' }, animate: { y: 0 }, exit: { y: '100%' }, transition: { type: 'spring' as const, stiffness: 320, damping: 34 } }
+    ? reducedMotion
+      ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+      : { initial: { y: '100%' }, animate: { y: 0 }, exit: { y: '100%' }, transition: { type: 'spring' as const, stiffness: 320, damping: 34 } }
     : reducedMotion
       ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
       : { initial: { opacity: 0, scale: 0.85, y: 12 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.9, y: 8 }, transition: { type: 'spring' as const, stiffness: 380, damping: 30 } };
+
+  // Lock the body scroll while the full-screen sheet is open so touch devices don't scroll behind.
+  useEffect(() => {
+    if (!open || !sheet) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open, sheet]);
 
   return (
     <>
@@ -89,6 +99,7 @@ export const ChatPanel = forwardRef<HTMLInputElement, ChatPanelProps>(function C
             key="panel"
             id={id}
             role="dialog"
+            aria-modal={sheet || undefined}
             aria-labelledby={titleId}
             onKeyDown={onKeyDown}
             {...panelMotion}
@@ -141,7 +152,7 @@ export const ChatPanel = forwardRef<HTMLInputElement, ChatPanelProps>(function C
                 ))}
                 {phase === 'thinking' && (
                   <motion.li
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                    initial={reducedMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                     className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-md border border-line bg-bubble px-3.5 py-3"
                     aria-label={`${portfolio.robot.name} is thinking`}
                   >
@@ -149,8 +160,9 @@ export const ChatPanel = forwardRef<HTMLInputElement, ChatPanelProps>(function C
                       <motion.span
                         key={i}
                         className="size-1.5 rounded-full bg-accent"
-                        animate={reducedMotion ? { opacity: 0.8 } : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                        transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.15 }}
+                        animate={reducedMotion ? undefined : { y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                        transition={reducedMotion ? undefined : { repeat: Infinity, duration: 0.9, delay: i * 0.15 }}
+                        style={reducedMotion ? { opacity: 0.8 } : undefined}
                       />
                     ))}
                   </motion.li>

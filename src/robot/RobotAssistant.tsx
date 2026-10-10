@@ -255,7 +255,7 @@ export function RobotAssistant({ placement = 'widget', panelSide = 'left', size,
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       if (sleepingRef.current) wake();
       if (chatOpen) inputRef.current?.focus();
@@ -304,7 +304,7 @@ export function RobotAssistant({ placement = 'widget', panelSide = 'left', size,
       aria-label={`${portfolio.robot.name}, ${portfolio.firstName}'s assistant. Press Enter to chat.`}
       aria-haspopup="dialog"
       aria-expanded={chatOpen}
-      aria-controls={chatOpen ? panelId : undefined}
+      aria-controls={panelId}
       onClick={onClick}
       onKeyDown={onKeyDown}
       onPointerDown={() => { dragged.current = false; }}
@@ -318,9 +318,11 @@ export function RobotAssistant({ placement = 'widget', panelSide = 'left', size,
       onHoverEnd={() => setHovered(false)}
       drag
       dragMomentum={false}
-      dragElastic={0.9}
+      dragElastic={0.6}
+      dragConstraints={{ left: -160, right: 160, top: -160, bottom: 160 }}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragTransitionEnd={() => { dragX.set(0); dragY.set(0); }}
       style={{ x: dragX, y: dragY }}
       whileHover={reduce || sleeping ? undefined : { scale: 1.06 }}
       whileTap={reduce ? undefined : { scale: 0.96 }}
@@ -351,7 +353,7 @@ export function RobotAssistant({ placement = 'widget', panelSide = 'left', size,
       type="button"
       onClick={chatOpen ? closeChat : openChat}
       aria-expanded={chatOpen}
-      aria-controls={chatOpen ? panelId : undefined}
+      aria-controls={panelId}
       whileTap={{ scale: 0.95 }}
       className="chat-cta"
     >

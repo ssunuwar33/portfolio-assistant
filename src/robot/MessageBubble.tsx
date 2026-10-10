@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { ContactLink, ExperienceItem, Project, SkillGroup } from '../config/portfolio.config';
 import { ArrowUpRight, CheckIcon, CopyIcon, contactIcon } from './icons';
@@ -14,7 +14,7 @@ interface Props {
   reducedMotion: boolean;
 }
 
-export function MessageBubble({ message, isLatest, busy, onPick, reducedMotion }: Props) {
+function MessageBubbleImpl({ message, isLatest, busy, onPick, reducedMotion }: Props) {
   const isUser = message.from === 'user';
   const words = message.text.split(/\s+/);
   const visible = isUser ? message.text : words.slice(0, message.visibleWords ?? words.length).join(' ');
@@ -53,6 +53,15 @@ export function MessageBubble({ message, isLatest, busy, onPick, reducedMotion }
     </motion.li>
   );
 }
+
+// Skips re-renders for every non-latest bubble on each streaming word tick.
+export const MessageBubble = memo(MessageBubbleImpl, (prev, next) =>
+  prev.message === next.message
+  && prev.isLatest === next.isLatest
+  && prev.busy === next.busy
+  && prev.reducedMotion === next.reducedMotion
+  && prev.onPick === next.onPick,
+);
 
 function AttachmentView({ attachment: a, isLatest, busy, onPick, reducedMotion }: { attachment: Attachment } & Omit<Props, 'message'>) {
   switch (a.type) {

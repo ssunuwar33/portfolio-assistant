@@ -32,8 +32,45 @@ Keep answers short (1-3 sentences), warm and a little playful. Plain text only, 
 FACTS
 ${knowledgeAsText()}`;
 
+const ALLOWED_ORIGINS = (process.env.CHAT_ALLOWED_ORIGINS ?? 'https://subashsunuwar.co.uk')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const MAX_BODY_BYTES = 8 * 1024;
+
+// Very small in-memory token bucket per IP. Good enough for a single-instance
+// deployment; swap for Upstash/Vercel KV if the function scales out.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 20;
+const hits = new Map<string, number[]>();
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const arr = (hits.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  arr.push(now);
+  hits.set(ip, arr);
+  return arr.length > RATE_LIMIT_MAX;
+}
+
+function clientIp(req: Request): string {
+  const h = req.headers;
+  return (h.get('x-forwarded-for')?.split(',')[0].trim()
+    || h.get('x-real-ip')
+    || h.get('cf-connecting-ip')
+    || 'unknown');
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+  const origin = req.headers.get('origin');
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return json({ error: 'Forbidden' }, 403);
+  }
+
+  const len = Number(req.headers.get('content-length') ?? '0');
+  if (len && len > MAX_BODY_BYTES) return json({ error: 'Payload too large' }, 413);
+
+  if (rateLimited(clientIp(req))) return json({ error: 'Too many requests' }, 429);
 
   let body: Body;
   try {
@@ -55,7 +92,7 @@ export default async function handler(req: Request): Promise<Response> {
     const reply = await callModel([...history, { role: 'user', content: message }]);
     return json({ reply });
   } catch (err) {
-    console.error('[api/chat]', err);
+    console.error('[api/chat]', (err as Error).message);
     // The robot falls back to its local answers when this fails.
     return json({ error: 'Upstream error' }, 502);
   }
@@ -82,7 +119,7 @@ async function callModel(messages: { role: 'user' | 'assistant'; content: string
       messages,
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic API ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`Anthropic ${res.status}`);
   const data = (await res.json()) as { content?: { type: string; text?: string }[] };
   return (data.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('').trim();
 }
