@@ -1,4 +1,4 @@
-# PARU: a portfolio assistant
+# ANKU: a portfolio assistant
 
 A small floating robot that lives on your portfolio, follows the cursor, reacts to clicks, falls asleep when ignored, and answers questions about you in a chat panel.
 

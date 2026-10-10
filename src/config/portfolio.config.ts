@@ -1,8 +1,8 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  PORTFOLIO CONFIG — the only file you need to edit to change what PARU knows.
+ *  PORTFOLIO CONFIG — the only file you need to edit to change what ANKU knows.
  * ─────────────────────────────────────────────────────────────────────────────
- *  Filled in from Subash Sunuwar's CV. PARU's answers, project cards, contact
+ *  Filled in from Subash Sunuwar's CV. ANKU's answers, project cards, contact
  *  buttons and quick-reply chips are all generated from this object.
  *
  *  • Colors      → edit `theme` below (accent color per emotion) and the CSS
@@ -220,7 +220,7 @@ export const portfolio = {
 
 export type Portfolio = typeof portfolio;
 
-/** Quick-reply chips shown under PARU's greeting. */
+/** Quick-reply chips shown under ANKU's greeting. */
 export const quickReplies = [
   `Who is ${portfolio.firstName}?`,
   'Show projects',
